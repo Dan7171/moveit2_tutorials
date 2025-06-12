@@ -5,15 +5,35 @@ SHELL ["/bin/bash", "-c", "-o", "pipefail"]
 ARG CUDA_MAJOR_VERSION=11
 ARG CUDA_MINOR_VERSION=7
 
+# Remove all ROS repository configurations and fix GPG key
+RUN rm -f /etc/apt/sources.list.d/ros2.list /etc/apt/sources.list.d/ros*.list && \
+    find /etc/apt/sources.list.d/ -name "*ros*" -delete && \
+    sed -i '/packages.ros.org/d' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends curl gnupg && \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
 # Bring the container up to date to get the latest ROS sync
 # hadolint ignore=DL3008, DL3013
 RUN apt-get update && apt-get upgrade -y && rosdep update
 
-# Install packages required to run the demo
+# Install packages required to run the demo including missing MoveIt dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-topic-based-ros2-control \
+    ros-humble-geometric-shapes \
+    ros-humble-realtime-tools \
+    ros-humble-controller-manager \
+    ros-humble-joint-state-broadcaster \
+    ros-humble-joint-trajectory-controller \
     wget \
     python3-pip
+
+# Rebuild the MoveIt workspace to ensure all dependencies are properly linked
+RUN cd /root/ws_moveit && \
+    source /opt/ros/humble/setup.bash && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 # Install CUDA
 ENV DEBIAN_FRONTEND noninteractive
