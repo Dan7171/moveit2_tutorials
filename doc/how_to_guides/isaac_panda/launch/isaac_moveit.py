@@ -41,7 +41,7 @@ try:
     from isaacsim import SimulationApp
 except:
     from omni.isaac.kit import SimulationApp
-
+EXPORT_GRAPH_TO_PNG = True
 FRANKA_STAGE_PATH = "/Franka"
 FRANKA_USD_PATH = "/Isaac/Robots/Franka/franka_alt_fingers.usd"
 CAMERA_PRIM_PATH = f"{FRANKA_STAGE_PATH}/panda_hand/geometry/realsense/realsense_camera"
@@ -514,6 +514,18 @@ viewport = omni.ui.Workspace.get_window("Viewport")
 rs_viewport = omni.ui.Workspace.get_window(REALSENSE_VIEWPORT_NAME)
 rs_viewport.dock_in(viewport, omni.ui.DockPosition.RIGHT)
 
+# export the action graph to an image
+if EXPORT_GRAPH_TO_PNG:
+    # og.export_graph_to_image(
+    #     graph_path="/ActionGraph",          # path inside the stage
+    #     file_path="/tmp/action_graph.png",  # or .svg
+    #     export_format="png"                 # png | svg
+    # )
+    # Build a GraphViz string
+    # graph_path="/ActionGraph",
+    # dot_str = og.get_graph_as_dot(graph_path)      # present in 4.5
+    # open("/tmp/action_graph.dot","w").write(dot_str)
+    pass
 
 while simulation_app.is_running():
 
